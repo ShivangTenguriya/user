@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Provider Registration - RepairService</title>
+  <style>
+    /* Same styling as before, with added sections and visibility toggling */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #f5f7fa;
+      color: #333;
+    }
+
+    nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1rem;
+      box-shadow: 0 3px 7px rgba(0,0,0,0.15);
+      z-index: 1000;
+      box-sizing: border-box;
+    }
+
+    nav .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    nav .nav-links a {
+      color: white;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: background-color 0.3s ease;
+      margin-left: 1rem;
+    }
+
+    nav .nav-links a:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    main {
+      margin-top: 90px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      background: white;
+      padding: 2rem 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    h1, h2 {
+      color: #007bff;
+    }
+
+    label {
+      display: block;
+      margin-top: 1.2rem;
+      font-weight: 600;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="file"] {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border: 1.7px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      margin-top: 0.3rem;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+
+    input:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    button {
+      margin-top: 2rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 0.9rem 2rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    #uploadedDocs ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #uploadedDocs li {
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+
+    .status-box {
+      padding: 1rem;
+      background-color: #e9f1ff;
+      border-left: 5px solid #007bff;
+      margin-top: 1.5rem;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">RepairService</div>
+    <div class="nav-links">
+      <a href="/provider/login">Login</a>
+      <a href="/provider/verify">Verify E-Mail</a>
+
+    </div>
+  </nav>
+
+  <main>
+  <h1>Provider Registration</h1>
+
+  <!-- STEP 1: Aadhar Input -->
+  <div id="aadharCheckSection">
+    <label for="checkAadhar">Enter your Aadhar Number to proceed</label>
+    <input type="text" id="checkAadhar" placeholder="12-digit Aadhar number" maxlength="12" />
+    <button onclick="checkAadhar()">Check Status</button>
+  </div>
+
+  <!-- STEP 2: Show status if found -->
+  <div id="statusSection" class="hidden">
+    <div class="status-box" id="statusMessage">Checking status...</div>
+  </div>
+
+  <!-- STEP 3: Full Registration Form -->
+  <div id="registrationFormSection" class="hidden">
+    <form id="registrationForm" enctype="multipart/form-data">
+      <label for="shopLocation">Shop Location</label>
+      <input type="text" id="shopLocation" name="shop_location" required />
+
+      <label for="ownerName">Owner's Name</label>
+      <input type="text" id="ownerName" name="owner_name" required />
+
+      <label for="phoneNumber">Phone Number</label>
+      <input type="tel" id="phoneNumber" name="phone" pattern="[0-9]{10}" required />
+
+      <label for="email">Email ID</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="aadhar">Aadhar Number</label>
+      <input type="text" id="aadhar" name="aadhar" pattern="\d{12}" required />
+
+      <label for="gstDoc">GST Invoice Document</label>
+      <input type="file" id="gstDoc" name="gst_doc" accept=".pdf,.jpg,.jpeg,.png" />
+
+      <label for="aadharDoc">Aadhar Document</label>
+      <input type="file" id="aadharDoc" name="aadhar_doc" accept=".pdf,.jpg,.jpeg,.png" />
+
+      <label for="additionalDocs">Additional Documents</label>
+      <input type="file" id="additionalDocs" name="additional_docs" multiple accept=".pdf,.jpg,.jpeg,.png" />
+
+      <div id="uploadedDocs"></div>
+
+      <button type="submit">Submit Application</button>
+    </form>
+  </div>
+</main>
+
+
+  <script>
+  const aadharInput = document.getElementById('checkAadhar');
+const statusSection = document.getElementById('statusSection');
+const statusMessage = document.getElementById('statusMessage');
+const formSection = document.getElementById('registrationFormSection');
+const registrationForm = document.getElementById('registrationForm');
+
+async function checkAadhar() {
+  const aadhar = aadharInput.value.trim();
+
+  if (!/^\d{12}$/.test(aadhar)) {
+    alert('Please enter a valid 12-digit Aadhar number.');
+    return;
+  }
+
+  statusSection.classList.remove('hidden');
+  statusMessage.textContent = 'Checking status...';
+  formSection.classList.add('hidden');
+
+  try {
+    const response = await fetch('/provider/check_aadhar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aadhar })
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Server error');
+
+    if (data.exists) {
+      if (data.status === 'Approved') {
+        statusMessage.innerHTML = `Status: <strong>${data.status}</strong><br>Your username: <strong>${data.username}</strong><br>Please verify your email.`;
+      } else {
+        statusMessage.textContent = `Status: ${data.status}`;
+      }
+      formSection.classList.add('hidden');
+    } else {
+      statusSection.classList.add('hidden');
+      formSection.classList.remove('hidden');
+      document.getElementById('aadhar').value = aadhar;
+    }
+  } catch (error) {
+    alert('Error checking Aadhar: ' + error.message);
+    statusSection.classList.add('hidden');
+    formSection.classList.add('hidden');
+  }
+}
+
+// Display selected file names
+document.getElementById('additionalDocs').addEventListener('change', function () {
+  const files = Array.from(this.files).map(f => f.name).join(', ');
+  document.getElementById('uploadedDocs').textContent = 'Selected: ' + files;
+});
+
+registrationForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const formData = new FormData(registrationForm);
+  const aadhar = document.getElementById('aadhar').value.trim();
+  if (!/^\d{12}$/.test(aadhar)) {
+    alert("Invalid Aadhar number.");
+    return;
+  }
+
+  try {
+    const response = await fetch('/provider/apply1', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      alert(data.message || 'Registration successful!');
+      registrationForm.reset();
+      formSection.classList.add('hidden');
+      statusSection.classList.remove('hidden');
+      statusMessage.textContent = 'Your registration has been submitted and is pending approval.';
+    } else {
+      alert('Error: ' + (data.error || 'Failed to submit registration.'));
+    }
+  } catch (error) {
+    alert('Error submitting registration: ' + error.message);
+  }
+});
+
+</script>
+</body>
+</html>

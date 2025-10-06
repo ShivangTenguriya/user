@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Provider Profile & Requests</title>
+<style>
+  /* Your provided styles */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+  }
+
+  nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1rem;
+    box-shadow: 0 3px 7px rgba(0,0,0,0.15);
+    z-index: 1000;
+    box-sizing: border-box;
+  }
+
+  nav .logo {
+    font-weight: 700;
+    font-size: 1.5rem;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  nav .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  nav .nav-links button {
+    background: none;
+    border: none;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+    user-select: none;
+  }
+
+  nav .nav-links button.active,
+  nav .nav-links button:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+  }
+
+  main {
+    margin-top: 80px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 2rem 2.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  }
+
+  main h1, main h2, main h3 {
+    color: #007bff;
+    font-weight: 700;
+  }
+
+  main p, label {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .card {
+    margin-bottom: 2rem;
+  }
+
+  .photo-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .photo-item {
+    position: relative;
+    width: 120px;
+    height: 90px;
+    cursor: pointer;
+  }
+
+  .photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 0 6px rgba(0,0,0,0.15);
+  }
+
+  .delete-btn {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: rgba(255,0,0,0.7);
+    border: none;
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  form label {
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  form input[type="text"],
+  form input[type="email"],
+  form input[type="tel"],
+  form textarea,
+  form input[type="datetime-local"],
+  form input[type="date"] {
+    width: 100%;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+
+  form button {
+    background-color: #007bff;
+    color: white;
+    font-weight: 700;
+    padding: 0.7rem 1.5rem;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  form button:hover {
+    background-color: #0056b3;
+  }
+
+  /* Lightbox modal */
+  #lightboxModal {
+    display: none;
+    position: fixed;
+    z-index: 1100;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    align-items: center;
+    justify-content: center;
+  }
+
+  #lightboxModal img {
+    max-width: 90%;
+    max-height: 80vh;
+    border-radius: 8px;
+  }
+
+  #lightboxModal .close-btn,
+  #lightboxModal .nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  #lightboxModal .close-btn {
+    top: 15px;
+    right: 25px;
+    font-size: 3rem;
+    transform: none;
+  }
+
+  #lightboxModal .nav-prev {
+    left: 15px;
+  }
+
+  #lightboxModal .nav-next {
+    right: 15px;
+  }
+
+  /* Requests Tabs */
+  #requestsSection {
+    margin-top: 1rem;
+  }
+
+  #requestTabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  #requestTabs button {
+    flex: 1;
+    background-color: #e6e6e6;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+
+  #requestTabs button.active {
+    background-color: #007bff;
+    color: white;
+  }
+
+  #requestsList {
+    list-style: none;
+    padding: 0;
+  }
+
+  #requestsList li {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+    background: #f9f9f9;
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+  }
+
+  #requestsList li .request-actions button {
+    margin-right: 0.5rem;
+  }
+
+  /* Cancel / Reschedule Modal */
+  #cancelRescheduleModal {
+    display: none;
+    position: fixed;
+    z-index: 1200;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    align-items: center;
+    justify-content: center;
+  }
+
+  #cancelRescheduleModal .modal-content {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  }
+
+  #cancelRescheduleModal label {
+    font-weight: 600;
+  }
+
+  #cancelRescheduleModal textarea,
+  #cancelRescheduleModal input[type="datetime-local"] {
+    width: 100%;
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+
+  #cancelRescheduleModal button {
+    margin-right: 0.5rem;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">MyProviderApp</div>
+  <div class="nav-links">
+    <button id="tabProfileBtn" class="active">Profile</button>
+    <button id="tabRequestsBtn">View Requests</button>
+  </div>
+</nav>
+
+<main>
+  <!-- Profile Section -->
+  <section id="profileSection">
+    <div class="card" id="profileView">
+      <h2>Your Public Profile</h2>
+      <p><strong>Username:</strong> <span id="providerName">Loading...</span></p>
+      <p><strong>Skills:</strong> <span id="viewSkills">—</span></p>
+      <div>
+        <strong>Work Photos:</strong>
+        <div class="photo-grid" id="publicPhotoGrid">Loading photos...</div>
+      </div>
+    </div>
+
+        <div class="card" id="profileEdit">
+      <h2>Edit Profile</h2>
+      <form id="profileForm">
+        <label for="skills">Your Skills</label>
+        <textarea id="skills" name="skills" rows="4" placeholder="e.g. Mobile Repair, Laptop Servicing..." required></textarea>
+        <button type="submit">Update Profile</button>
+      </form>
+    </div>
+
+    <div class="card" id="photoManager">
+      <h2>Manage Work Photographs</h2>
+      <form id="photoUploadForm" enctype="multipart/form-data">
+        <label for="workPhotos">Upload New Photos (JPEG/PNG)</label>
+        <input type="file" id="workPhotos" name="photos" multiple accept="image/*" />
+        <button type="submit">Upload Photos</button>
+      </form>
+      <div class="photo-grid" id="editPhotoGrid">Loading photos...</div>
+    </div>
+  </section>
+
+  <!-- Requests Section -->
+  <div id="requestTabs">
+  <button data-tab="new" class="active">New Requests</button>
+  <button data-tab="pending">Pending Requests</button>
+  <button data-tab="completed">Completed Requests</button>
+  <button data-tab="cancelled">Cancelled Requests</button>
+  <button data-tab="rescheduled">Rescheduled Requests</button> <!-- New Tab -->
+</div>
+
+
+    <ul id="requestsList">
+      <!-- Requests will be dynamically loaded here -->
+      <li>Loading requests...</li>
+    </ul>
+  </section>
+</main>
+
+<!-- Lightbox Modal -->
+<div id="lightboxModal">
+  <span class="close-btn" title="Close">&times;</span>
+  <span class="nav-arrow nav-prev" title="Previous">&#10094;</span>
+  <span class="nav-arrow nav-next" title="Next">&#10095;</span>
+  <img id="lightboxImage" src="" alt="Enlarged Photo" />
+</div>
+
+<!-- Cancel / Reschedule Modal -->
+<div id="cancelRescheduleModal">
+  <div class="modal-content">
+    <h3>Cancel or Reschedule Request</h3>
+    <form id="cancelRescheduleForm">
+      <input type="hidden" id="cancelRequestId" />
+      <label>
+        <input type="radio" name="action" value="cancel" checked />
+        Cancel Request
+      </label><br />
+      <label>
+        <input type="radio" name="action" value="reschedule" />
+        Reschedule Request
+      </label>
+
+      <div id="cancelReasonGroup" style="margin-top: 1rem;">
+        <label for="cancelReason">Cancel Reason</label>
+        <textarea id="cancelReason" rows="3" placeholder="Reason for cancellation..." required></textarea>
+      </div>
+
+      <div id="rescheduleGroup" style="display:none; margin-top: 1rem;">
+        <label for="rescheduleTime">Reschedule Date & Time</label>
+        <input type="datetime-local" id="rescheduleTime" />
+      </div>
+
+      <div style="margin-top:1rem; text-align:right;">
+        <button type="button" id="cancelModalCloseBtn">Close</button>
+        <button type="submit">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Navbar Tab Switching
+  const tabProfileBtn = document.getElementById('tabProfileBtn');
+  const tabRequestsBtn = document.getElementById('tabRequestsBtn');
+  const profileSection = document.getElementById('profileSection');
+  const requestsSection = document.getElementById('requestsSection');
+
+  tabProfileBtn.addEventListener('click', () => {
+    tabProfileBtn.classList.add('active');
+    tabRequestsBtn.classList.remove('active');
+    profileSection.style.display = '';
+    requestsSection.style.display = 'none';
+  });
+
+  tabRequestsBtn.addEventListener('click', () => {
+    tabRequestsBtn.classList.add('active');
+    tabProfileBtn.classList.remove('active');
+    profileSection.style.display = 'none';
+    requestsSection.style.display = '';
+    loadRequests('new');
+  });
+
+  // Lightbox Modal code (same as your original code)
+  const lightboxModal = document.getElementById('lightboxModal');
+  const lightboxImage = document.getElementById('lightboxImage');
+  const closeBtn = lightboxModal.querySelector('.close-btn');
+  const prevBtn = lightboxModal.querySelector('.nav-prev');
+  const nextBtn = lightboxModal.querySelector('.nav-next');
+
+  let currentIndex = 0;
+  let photoList = [];
+
+  function openLightbox(src, index) {
+    currentIndex = index;
+    lightboxImage.src = src;
+    lightboxModal.style.display = 'flex';
+    updateNavButtons();
+  }
+  function closeLightbox() {
+    lightboxModal.style.display = 'none';
+    lightboxImage.src = '';
+  }
+  function updateNavButtons() {
+    prevBtn.style.display = currentIndex > 0 ? 'block' : 'none';
+    nextBtn.style.display = currentIndex < photoList.length - 1 ? 'block' : 'none';
+  }
+  function showPhotoAt(index) {
+    if (index < 0 || index >= photoList.length) return;
+    currentIndex = index;
+    lightboxImage.src = photoList[currentIndex];
+    updateNavButtons();
+  }
+  closeBtn.addEventListener('click', closeLightbox);
+  prevBtn.addEventListener('click', () => showPhotoAt(currentIndex - 1));
+  nextBtn.addEventListener('click', () => showPhotoAt(currentIndex + 1));
+  lightboxModal.addEventListener('click', (e) => {
+    if (e.target === lightboxModal) closeLightbox();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (lightboxModal.style.display === 'flex') {
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') showPhotoAt(currentIndex - 1);
+      if (e.key === 'ArrowRight') showPhotoAt(currentIndex + 1);
+    }
+  });
+
+  function createPhotoItem(src, photoId, isEditable = false, index = 0) {
+    const div = document.createElement('div');
+    div.className = 'photo-item';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = 'Work Photo';
+    img.addEventListener('click', () => openLightbox(src, index));
+    div.appendChild(img);
+
+    if (isEditable && photoId != null) {
+      const btn = document.createElement('button');
+      btn.className = 'delete-btn';
+      btn.title = 'Delete Photo';
+      btn.textContent = '×';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deletePhoto(photoId);
+      });
+      div.appendChild(btn);
+    }
+    return div;
+  }
+
+  // Load Profile Data
+  async function loadProfile() {
+    try {
+      const res = await fetch('/provider/profile', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch profile');
+
+      const data = await res.json();
+
+      document.getElementById('providerName').textContent = data.username || '';
+      document.getElementById('viewSkills').textContent = data.skills || '—';
+
+      const publicPhotoGrid = document.getElementById('publicPhotoGrid');
+      publicPhotoGrid.innerHTML = '';
+
+      photoList = [];
+
+      if (data.photos && data.photos.length) {
+        data.photos.forEach((photoObj, i) => {
+          const url = typeof photoObj === 'string' ? photoObj : photoObj.url;
+          photoList.push(url);
+          const photoItem = createPhotoItem(url, null, false, i);
+          publicPhotoGrid.appendChild(photoItem);
+        });
+      } else {
+        publicPhotoGrid.textContent = 'No photos uploaded yet.';
+      }
+
+      document.getElementById('skills').value = data.skills || '';
+
+      const editPhotoGrid = document.getElementById('editPhotoGrid');
+      editPhotoGrid.innerHTML = '';
+      if (data.photos && data.photos.length) {
+        data.photos.forEach((photoObj, i) => {
+          if (typeof photoObj === 'string') {
+            const photoItem = createPhotoItem(photoObj, null, true, i);
+            editPhotoGrid.appendChild(photoItem);
+          } else {
+            const photoItem = createPhotoItem(photoObj.url, photoObj.id, true, i);
+            editPhotoGrid.appendChild(photoItem);
+          }
+        });
+      } else {
+        editPhotoGrid.textContent = 'No photos uploaded yet.';
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to load profile data.');
+    }
+  }
+
+  // Update Profile (skills)
+  document.getElementById('profileForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const skills = document.getElementById('skills').value.trim();
+
+    try {
+      const res = await fetch('/provider/update_profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ skills })
+      });
+      if (!res.ok) throw new Error('Update failed');
+
+      alert('Profile updated successfully!');
+      loadProfile();
+    } catch (err) {
+      alert('Error updating profile.');
+    }
+  });
+
+  // Upload Photos
+  document.getElementById('photoUploadForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const files = document.getElementById('workPhotos').files;
+    if (files.length === 0) {
+      alert('Please select one or more photos to upload.');
+      return;
+    }
+
+    const formData = new FormData();
+    for (let file of files) {
+      formData.append('photos', file);
+    }
+
+    try {
+      const res = await fetch('/provider/upload_photos', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+      if (!res.ok) throw new Error('Upload failed');
+
+      alert('Photos uploaded successfully!');
+      document.getElementById('workPhotos').value = '';
+      loadProfile();
+    } catch (err) {
+      alert('Error uploading photos.');
+    }
+  });
+
+  async function deletePhoto(photoId) {
+    if (!confirm('Are you sure you want to delete this photo?')) return;
+    try {
+      const res = await fetch(`/provider/delete_photo/${photoId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Delete failed');
+
+      alert('Photo deleted.');
+      loadProfile();
+    } catch (err) {
+      alert('Error deleting photo.');
+    }
+  }
+
+  // Requests Handling
+  const requestTabs = document.querySelectorAll('#requestTabs button');
+  const requestsList = document.getElementById('requestsList');
+
+  requestTabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      requestTabs.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadRequests(btn.dataset.tab);
+    });
+  });
+
+  // Store requests fetched to manage cancel/reschedule
+  let currentRequests = [];
+
+  async function loadRequests(status) {
+    requestsList.innerHTML = '<li>Loading requests...</li>';
+    try {
+      // Example API: /provider/requests?status=new|pending|cancelled
+      const res = await fetch(`/provider/requests?status=${status}`, { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to load requests');
+      const data = await res.json();
+      currentRequests = data.appointments || [];
+
+
+      if (currentRequests.length === 0) {
+        requestsList.innerHTML = '<li>No requests found.</li>';
+        return;
+      }
+
+      requestsList.innerHTML = '';
+      currentRequests.forEach(req => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <p><strong>Request ID:</strong> ${req.id}</p>
+          <p><strong>Customer:</strong> ${req.user_id || 'N/A'}</p>
+          <p><strong>Date:</strong> ${req.preferred_time || 'N/A'}</p>
+          <p><strong>Status:</strong> ${req.status}</p>
+          <div class="request-actions"></div>
+        `;
+
+        const actionsDiv = li.querySelector('.request-actions');
+
+        if (status === 'new') {
+          const cancelBtn = document.createElement('button');
+          cancelBtn.textContent = 'Cancel';
+          cancelBtn.addEventListener('click', () => openCancelRescheduleModal(req.id));
+          actionsDiv.appendChild(cancelBtn);
+
+          const acceptBtn = document.createElement('button');
+          acceptBtn.textContent = 'Accept';
+          acceptBtn.addEventListener('click', () => markRequestPending(req.id));
+          actionsDiv.appendChild(acceptBtn);
+        }
+
+        if (status === 'pending') {
+          const completeBtn = document.createElement('button');
+          completeBtn.textContent = 'Mark as Completed';
+          completeBtn.addEventListener('click', () => markRequestCompleted(req.id));
+          actionsDiv.appendChild(completeBtn);
+
+          const cancelBtn = document.createElement('button');
+          cancelBtn.textContent = 'Cancel';
+          cancelBtn.addEventListener('click', () => openCancelRescheduleModal(req.id));
+          actionsDiv.appendChild(cancelBtn);
+        }
+
+        // Add other action buttons if needed for pending or cancelled
+
+        requestsList.appendChild(li);
+      });
+    } catch (err) {
+      requestsList.innerHTML = '<li>Error loading requests.</li>';
+      console.error(err);
+    }
+  }
+
+  
+
+  async function markRequestPending(requestId) {
+  try {
+    const res = await fetch(`/provider/accept_request/${requestId}`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Failed to accept request');
+    alert('Request moved to Pending.');
+    loadRequests('new');
+  } catch (err) {
+    alert('Error accepting request.');
+    console.error(err);
+  }
+}
+
+async function markRequestCompleted(requestId) {
+  try {
+    const res = await fetch(`/provider/complete_request/${requestId}`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Failed to complete request');
+    alert('Request marked as Completed.');
+    loadRequests('pending');
+  } catch (err) {
+    alert('Error completing request.');
+    console.error(err);
+  }
+}
+
+
+  // Cancel / Reschedule Modal Logic
+  const cancelModal = document.getElementById('cancelRescheduleModal');
+  const cancelModalCloseBtn = document.getElementById('cancelModalCloseBtn');
+  const cancelRescheduleForm = document.getElementById('cancelRescheduleForm');
+  const cancelRequestIdInput = document.getElementById('cancelRequestId');
+  const cancelReasonGroup = document.getElementById('cancelReasonGroup');
+  const rescheduleGroup = document.getElementById('rescheduleGroup');
+  const cancelReasonInput = document.getElementById('cancelReason');
+  const rescheduleTimeInput = document.getElementById('rescheduleTime');
+
+  function openCancelRescheduleModal(requestId) {
+    cancelRequestIdInput.value = requestId;
+    cancelReasonInput.value = '';
+    rescheduleTimeInput.value = '';
+    cancelReasonGroup.style.display = '';
+    rescheduleGroup.style.display = 'none';
+
+    // Set cancel checked by default
+    cancelRescheduleForm.action.value = 'cancel';
+
+    cancelModal.style.display = 'flex';
+  }
+
+  cancelModalCloseBtn.addEventListener('click', () => {
+    cancelModal.style.display = 'none';
+  });
+
+  cancelRescheduleForm.action.forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (cancelRescheduleForm.action.value === 'cancel') {
+        cancelReasonGroup.style.display = '';
+        cancelReasonInput.required = true;
+        rescheduleGroup.style.display = 'none';
+        rescheduleTimeInput.required = false;
+      } else {
+        cancelReasonGroup.style.display = 'none';
+        cancelReasonInput.required = false;
+        rescheduleGroup.style.display = '';
+        rescheduleTimeInput.required = true;
+      }
+    });
+  });
+
+  cancelRescheduleForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const requestId = cancelRequestIdInput.value;
+    const action = cancelRescheduleForm.action.value;
+
+    if (action === 'cancel') {
+      const reason = cancelReasonInput.value.trim();
+      if (!reason) {
+        alert('Please provide a reason for cancellation.');
+        return;
+      }
+      // Call API to cancel request
+      try {
+        const res = await fetch(`/provider/cancel_request/${requestId}`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reason })
+        });
+        if (!res.ok) throw new Error('Cancel failed');
+        alert('Request cancelled.');
+        cancelModal.style.display = 'none';
+        loadRequests('new');
+      } catch (err) {
+        alert('Error cancelling request.');
+        console.error(err);
+      }
+    } else if (action === 'reschedule') {
+      const newDate = rescheduleTimeInput.value;
+      if (!newDate) {
+        alert('Please select a new date and time.');
+        return;
+      }
+      // Call API to reschedule request
+      try {
+        const res = await fetch(`/provider/reschedule_request/${requestId}`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newDate })
+        });
+        if (!res.ok) throw new Error('Reschedule failed');
+        alert('Request rescheduled.');
+        cancelModal.style.display = 'none';
+        loadRequests('new');
+      } catch (err) {
+        alert('Error rescheduling request.');
+        console.error(err);
+      }
+    }
+  });
+
+  // Initialize
+  loadProfile();
+</script>
+
+</body>
+</html>
+

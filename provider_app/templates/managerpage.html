@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Provider Requests Management</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f5f6fa;
+    margin: 0;
+    padding: 0;
+    color: #2f3640;
+  }
+  header {
+    background: #00a8ff;
+    color: white;
+    padding: 18px 0;
+    text-align: center;
+    font-size: 28px;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.1);
+  }
+  .container {
+    max-width: 980px;
+    margin: 30px auto;
+    background: white;
+    padding: 24px 28px;
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgb(0 0 0 / 0.05);
+  }
+  .tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 28px;
+  }
+  .tab {
+    margin: 0 18px;
+    padding: 12px 28px;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    font-weight: 600;
+    font-size: 18px;
+    color: #57606f;
+    transition: border-color 0.3s ease, color 0.3s ease;
+  }
+  .tab.active {
+    border-color: #00a8ff;
+    color: #00a8ff;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+  th, td {
+    padding: 14px 18px;
+    border-bottom: 1px solid #dcdde1;
+    text-align: left;
+    font-size: 15px;
+  }
+  th {
+    background: #f0f2f5;
+    font-weight: 600;
+    color: #353b48;
+  }
+  tr:hover {
+    background: #f9f9f9;
+  }
+  button {
+    margin-right: 8px;
+    padding: 7px 14px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
+    transition: background-color 0.3s ease;
+    color: white;
+    user-select: none;
+  }
+  button.accept {
+    background-color: #27ae60;
+  }
+  button.accept:hover {
+    background-color: #219150;
+  }
+  button.reschedule {
+    background-color: #f39c12;
+    color: white;
+  }
+  button.reschedule:hover {
+    background-color: #d78c0a;
+  }
+  button.cancel {
+    background-color: #e74c3c;
+  }
+  button.cancel:hover {
+    background-color: #c0392b;
+  }
+  button.complete {
+    background-color: #3498db;
+  }
+  button.complete:hover {
+    background-color: #2980b9;
+  }
+  /* Modal */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+  .modal {
+    background: white;
+    padding: 26px 30px;
+    border-radius: 8px;
+    width: 420px;
+    box-shadow: 0 10px 25px rgb(0 0 0 / 0.15);
+    font-size: 15px;
+    color: #2f3640;
+  }
+  .modal h3 {
+    margin-top: 0;
+    font-weight: 700;
+  }
+  .modal label {
+    display: block;
+    margin: 18px 0 6px;
+  }
+  .modal textarea {
+    width: 100%;
+    height: 80px;
+    padding: 10px;
+    resize: vertical;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    font-family: inherit;
+  }
+  input[type="datetime-local"] {
+    width: 100%;
+    padding: 9px 12px;
+    margin-top: 6px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-family: inherit;
+  }
+  .modal-buttons {
+    margin-top: 20px;
+    text-align: right;
+  }
+  .modal-buttons button {
+    padding: 8px 16px;
+    font-weight: 600;
+    font-size: 14px;
+    user-select: none;
+  }
+  .modal-buttons button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .modal-buttons button#cancel-close,
+  .modal-buttons button#reschedule-close {
+    background-color: #aaa;
+    color: white;
+  }
+  .modal-buttons button#cancel-close:hover,
+  .modal-buttons button#reschedule-close:hover {
+    background-color: #888;
+  }
+  .modal-buttons button#cancel-submit,
+  .modal-buttons button#reschedule-submit {
+    background-color: #00a8ff;
+    color: white;
+  }
+  .modal-buttons button#cancel-submit:hover,
+  .modal-buttons button#reschedule-submit:hover {
+    background-color: #008ae6;
+  }
+</style>
+</head>
+<body>
+
+<header>Provider Requests Management</header>
+
+<div class="container">
+  <div class="tabs">
+    <div class="tab active" data-tab="new">New Requests</div>
+    <div class="tab" data-tab="pending">Pending Requests</div>
+    <div class="tab" data-tab="completed">Completed Requests</div>
+  </div>
+
+  <!-- New Requests Table -->
+  <table id="new-requests">
+    <thead>
+      <tr>
+        <th>Request ID</th>
+        <th>User</th>
+        <th>Model</th>
+        <th>Problem</th>
+        <th>Preferred Time</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-request-id="101">
+        <td>101</td>
+        <td>John Doe</td>
+        <td>iPhone 12</td>
+        <td>Screen cracked</td>
+        <td>2025-09-12 15:00</td>
+        <td>
+          <button class="accept">Accept</button>
+          <button class="reschedule">Reschedule</button>
+          <button class="cancel">Cancel</button>
+        </td>
+      </tr>
+      <tr data-request-id="102">
+        <td>102</td>
+        <td>Jane Smith</td>
+        <td>Samsung Galaxy S21</td>
+        <td>Battery issue</td>
+        <td>2025-09-13 10:00</td>
+        <td>
+          <button class="accept">Accept</button>
+          <button class="reschedule">Reschedule</button>
+          <button class="cancel">Cancel</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Pending Requests Table -->
+  <table id="pending-requests" style="display:none;">
+    <thead>
+      <tr>
+        <th>Request ID</th>
+        <th>User</th>
+        <th>Model</th>
+        <th>Problem</th>
+        <th>Scheduled Time</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-request-id="103">
+        <td>103</td>
+        <td>Emily Rose</td>
+        <td>OnePlus 9</td>
+        <td>Camera not working</td>
+        <td>2025-09-15 11:00</td>
+        <td>
+          <button class="complete">Mark Completed</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Completed Requests Table -->
+  <table id="completed-requests" style="display:none;">
+    <thead>
+      <tr>
+        <th>Request ID</th>
+        <th>User</th>
+        <th>Model</th>
+        <th>Problem</th>
+        <th>Completed On</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr data-request-id="100">
+        <td>100</td>
+        <td>Michael Clark</td>
+        <td>iPad Pro</td>
+        <td>Charging issue</td>
+        <td>2025-09-05 14:00</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal for Cancel Reason -->
+<div class="modal-bg" id="cancel-modal">
+  <div class="modal">
+    <h3>Cancel Request</h3>
+    <label for="cancel-reason">Reason for cancellation:</label>
+    <textarea id="cancel-reason" placeholder="Enter reason..." rows="4"></textarea>
+    <div class="modal-buttons">
+      <button id="cancel-close">Close</button>
+      <button id="cancel-submit" disabled>Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Reschedule -->
+<div class="modal-bg" id="reschedule-modal">
+  <div class="modal">
+    <h3>Reschedule Request</h3>
+    <label for="reschedule-time">Select new date and time:</label>
+    <input type="datetime-local" id="reschedule-time" />
+    <div class="modal-buttons">
+      <button id="reschedule-close">Close</button>
+      <button id="reschedule-submit" disabled>Submit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Tab switching
+  const tabs = document.querySelectorAll('.tab');
+  const tables = {
+    new: document.getElementById('new-requests'),
+    pending: document.getElementById('pending-requests'),
+    completed: document.getElementById('completed-requests'),
+  };
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const selected = tab.getAttribute('data-tab');
+      Object.keys(tables).forEach(key => {
+        tables[key].style.display = (key === selected) ? '' : 'none';
+      });
+    });
+  });
+
+  // Modal Elements
+  const cancelModal = document.getElementById('cancel-modal');
+  const cancelReasonInput = document.getElementById('cancel-reason');
+  const cancelSubmitBtn = document.getElementById('cancel-submit');
+  const cancelCloseBtn = document.getElementById('cancel-close');
+
+  const rescheduleModal = document.getElementById('reschedule-modal');
+  const rescheduleTimeInput = document.getElementById('reschedule-time');
+  const rescheduleSubmitBtn = document.getElementById('reschedule-submit');
+  const rescheduleCloseBtn = document.getElementById('reschedule-close');
+
+  let currentRow = null;  // Track which row is being acted on
+  let currentAction = ''; // 'cancel' or 'reschedule'
+
+  // Enable/disable submit buttons based on input validation
+  cancelReasonInput.addEventListener('input', () => {
+    cancelSubmitBtn.disabled = cancelReasonInput.value.trim() === '';
+  });
+
+  rescheduleTimeInput.addEventListener('input', () => {
+    rescheduleSubmitBtn.disabled = rescheduleTimeInput.value === '';
+  });
+
+  cancelCloseBtn.addEventListener('click', () => {
+    cancelModal.style.display = 'none';
+    cancelReasonInput.value = '';
+    cancelSubmitBtn.disabled = true;
+    currentRow = null;
+  });
+
+  rescheduleCloseBtn.addEventListener('click', () => {
+    rescheduleModal.style.display = 'none';
+    rescheduleTimeInput.value = '';
+    rescheduleSubmitBtn.disabled = true;
+    currentRow = null;
+  });
+
+  // Handle Cancel button click (open modal)
+  function openCancelModal(row) {
+    currentRow = row;
+    cancelModal.style.display = 'flex';
+    cancelReasonInput.value = '';
+    cancelSubmitBtn.disabled = true;
+  }
+
+  // Handle Reschedule button click (open modal)
+  function openRescheduleModal(row) {
+    currentRow = row;
+    // Pre-fill with current time from row
+    const timeText = row.querySelector('td:nth-child(5)').textContent.trim();
+    // Convert to ISO local datetime format for input
+    const date = new Date(timeText.replace(' ', 'T'));
+    if (!isNaN(date.getTime())) {
+      rescheduleTimeInput.value = date.toISOString().slice(0,16);
+    } else {
+      rescheduleTimeInput.value = '';
+    }
+    rescheduleSubmitBtn.disabled = rescheduleTimeInput.value === '';
+    rescheduleModal.style.display = 'flex';
+  }
+
+  // Accept: Move request from New to Pending, keep preferred time as scheduled time
+  function acceptRequest(row) {
+    const requestId = row.dataset.requestId;
+    const user = row.children[1].textContent;
+    const model = row.children[2].textContent;
+    const problem = row.children[3].textContent;
+    const preferredTime = row.children[4].textContent;
+
+    // Remove from New
+    row.remove();
+
+    // Add to Pending
+    const tbodyPending = tables.pending.querySelector('tbody');
+    const tr = document.createElement('tr');
+    tr.dataset.requestId = requestId;
+    tr.innerHTML = `
+      <td>${requestId}</td>
+      <td>${user}</td>
+      <td>${model}</td>
+      <td>${problem}</td>
+      <td>${preferredTime}</td>
+      <td><button class="complete">Mark Completed</button></td>
+    `;
+    tbodyPending.appendChild(tr);
+  }
+
+  // Cancel submit
+  cancelSubmitBtn.addEventListener('click', () => {
+    if (!currentRow) return;
+
+    // Just remove the row from New Requests (simulate cancellation)
+    currentRow.remove();
+    cancelModal.style.display = 'none';
+    cancelReasonInput.value = '';
+    cancelSubmitBtn.disabled = true;
+    currentRow = null;
+  });
+
+  // Reschedule submit
+  rescheduleSubmitBtn.addEventListener('click', () => {
+    if (!currentRow) return;
+
+    // Update the Preferred Time in the row (New Requests)
+    const newTime = rescheduleTimeInput.value.replace('T', ' ');
+    currentRow.children[4].textContent = newTime;
+
+    rescheduleModal.style.display = 'none';
+    rescheduleTimeInput.value = '';
+    rescheduleSubmitBtn.disabled = true;
+    currentRow = null;
+  });
+
+  // Mark Completed (move from Pending to Completed with current date/time)
+  function markCompleted(row) {
+    const requestId = row.dataset.requestId;
+    const user = row.children[1].textContent;
+    const model = row.children[2].textContent;
+    const problem = row.children[3].textContent;
+
+    // Remove from Pending
+    row.remove();
+
+    // Add to Completed with current date/time
+    const tbodyCompleted = tables.completed.querySelector('tbody');
+    const now = new Date();
+    const completedTime = now.getFullYear() + '-' +
+      String(now.getMonth()+1).padStart(2,'0') + '-' +
+      String(now.getDate()).padStart(2,'0') + ' ' +
+      String(now.getHours()).padStart(2,'0') + ':' +
+      String(now.getMinutes()).padStart(2,'0');
+
+    const tr = document.createElement('tr');
+    tr.dataset.requestId = requestId;
+    tr.innerHTML = `
+      <td>${requestId}</td>
+      <td>${user}</td>
+      <td>${model}</td>
+      <td>${problem}</td>
+      <td>${completedTime}</td>
+    `;
+    tbodyCompleted.appendChild(tr);
+  }
+
+  // Delegated event listener for buttons
+  document.body.addEventListener('click', (e) => {
+    const btn = e.target;
+
+    if (btn.classList.contains('accept')) {
+      const row = btn.closest('tr');
+      acceptRequest(row);
+    }
+    else if (btn.classList.contains('cancel')) {
+      const row = btn.closest('tr');
+      openCancelModal(row);
+    }
+    else if (btn.classList.contains('reschedule')) {
+      const row = btn.closest('tr');
+      openRescheduleModal(row);
+    }
+    else if (btn.classList.contains('complete')) {
+      const row = btn.closest('tr');
+      markCompleted(row);
+    }
+  });
+
+</script>
+
+</body>
+</html>

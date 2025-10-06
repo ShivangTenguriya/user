@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Provider Portal - RepairService</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      background: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* Fixed navbar */
+    nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1rem; /* reduced side padding */
+    box-shadow: 0 3px 7px rgba(0,0,0,0.15);
+    z-index: 1000;
+    box-sizing: border-box; /* ensure padding included in width */
+    }
+
+    nav .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    nav .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;  /* allow wrapping on small screens */
+    }
+
+    nav .nav-links a {
+      color: white;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    nav .nav-links a:hover {
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Main content */
+    main {
+      margin-top: 80px; /* height of navbar + some space */
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 2rem 2.5rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    main h1 {
+      color: #007bff;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    main p {
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+    }
+
+    main ul {
+      list-style-type: disc;
+      padding-left: 1.4rem;
+      margin-bottom: 2rem;
+    }
+
+    main ul li {
+      margin-bottom: 0.8rem;
+      font-size: 1rem;
+    }
+
+    /* Call to action button */
+    .cta-buttons {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .cta-buttons a {
+      background-color: #007bff;
+      color: white;
+      font-weight: 700;
+      padding: 0.9rem 2rem;
+      border-radius: 30px;
+      text-decoration: none;
+      font-size: 1.1rem;
+      transition: background-color 0.3s ease;
+      user-select: none;
+      display: inline-block;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .cta-buttons a:hover {
+      background-color: #0056b3;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      main {
+        padding: 1.5rem 1.5rem;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+      }
+
+      .cta-buttons a {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo" onclick="window.location.href='/'">RepairService</div>
+    <div class="nav-links">
+      <a href="/provider/apply">Apply for Registration</a>
+      <a href="/provider/login1">Login</a>
+    </div>
+  </nav>
+
+  <main>
+    <h1>Welcome to RepairService Provider Portal</h1>
+    <p>Join our platform to connect with customers who need gadget repairs in their area. Showcase your skills, manage your appointments, and grow your business with ease.</p>
+
+    <h2>Why Join RepairService?</h2>
+    <ul>
+      <li>Reach customers near you using live location-based matching.</li>
+      <li>Build your professional profile highlighting your expertise and past work.</li>
+      <li>Manage your service requests with a comprehensive dashboard.</li>
+      <li>Secure and easy appointment scheduling.</li>
+      <li>Receive user ratings and reviews to build your reputation.</li>
+    </ul>
+
+    <div class="cta-buttons">
+      <a href="/provider/apply">Apply Now</a>
+      <a href="/provider/login1">Provider Login</a>
+    </div>
+  </main>
+
+</body>
+</html>
