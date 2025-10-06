@@ -9,7 +9,7 @@ from flask_login import login_required, LoginManager, login_user, current_user
 from flask import Flask, request, jsonify, render_template, redirect, session, url_for, flash, abort
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
-from shared_lib.models import db, ServiceProvider, ProviderProfileWork, Appointment
+from models import db, ServiceProvider, ProviderProfileWork, Appointment
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if BASE_DIR not in sys.path:
