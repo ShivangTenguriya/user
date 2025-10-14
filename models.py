@@ -86,6 +86,7 @@ class Appointment(db.Model):
     preferred_time = db.Column(db.DateTime)
     status = db.Column(db.String(20), default='New')  # New, Pending, Completed, Cancelled, Rescheduled
     cancel_reason = db.Column(db.Text, nullable=True)
+    reschedule_reason = db.Column(db.Text, nullable = False)
     reschedule_time = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -95,6 +96,11 @@ class Appointment(db.Model):
     gadget_type = db.relationship('GadgetType')
     rating = db.Column(db.Integer, nullable=True)
     comment = db.Column(db.Text, nullable=True)
+
+    amount = db.Column(db.Integer, nullable = False)
+    order_id = db.Column(db.String(100), nullable=False)
+    payment_id = db.Column(db.String(100), nullable=False)
+    payment_status = db.Column(db.Boolean, default = False)
 
 
 class ProviderProfileWork(db.Model):

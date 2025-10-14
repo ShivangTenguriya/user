@@ -1,4 +1,4 @@
-import os, sys, random
+import os, sys, random, razorpay
 from dotenv import load_dotenv
 import cloudinary.uploader
 import smtplib, traceback
@@ -21,7 +21,7 @@ load_dotenv()
 app.secret_key = os.getenv('secret_key')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('url_db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024  # max 1MB upload
+app.config['MAX_CONTENT_LENGTH'] =  1 * 1024 * 1024
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'jpg', 'jpeg', 'png'}
 
 cloudinary.config(
@@ -32,6 +32,10 @@ cloudinary.config(
 )
 db.init_app(app)
 
+RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
+RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
+razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -39,6 +43,15 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id):
     return ServiceProvider.query.get(int(user_id))
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+def get_logged_in_provider():
+    provider_id = session.get('provider_id')
+    if not provider_id:
+        return None
+    return ServiceProvider.query.get(provider_id)
 
 def send_verification_email(to_email, code):
     smtp_server = os.getenv('server')
@@ -82,15 +95,6 @@ def unauthorized_callback():
         return jsonify({'error': 'Unauthorized'}), 401
     return redirect(url_for('provider_login'))
 
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
-
-def get_logged_in_provider():
-    provider_id = session.get('provider_id')
-    if not provider_id:
-        return None
-    return ServiceProvider.query.get(provider_id)
 
 @app.route('/provider/check_aadhar', methods=['POST'])
 def check_aadhar():
@@ -159,7 +163,7 @@ def provider_apply1():
                 uploaded_additional_docs.append(doc_url)
 
         provider = ServiceProvider(
-            username=form.get('email'),
+            username=form.get('email').lower(),
             email=form.get('email'),
             phone_number=form.get('phone'),
             aadhar=aadhar,
@@ -186,7 +190,7 @@ def provider_login():
     if request.method == 'GET':
         return render_template('login.html')
 
-    username = request.form.get('username')
+    username = request.form.get('username').lower()
     password = request.form.get('password')
 
     if not username or not password:
@@ -224,7 +228,7 @@ def profile_page():
     photos_data = [
         {
             'id': p.id,
-            'url': p.image_path  # Already a Cloudinary URL
+            'url': p.image_path  
         } for p in photos
     ]
 
@@ -271,13 +275,13 @@ def upload_photos():
         upload_result = cloudinary.uploader.upload(file, folder="provider_photos")
 
         if not upload_result.get('secure_url'):
-            continue  # skip this file if upload failed
+            continue  
 
         cloudinary_url = upload_result['secure_url']
 
         new_photo = ProviderProfileWork(
             provider_id=user.id,
-            image_path=cloudinary_url  # Save full URL now
+            image_path=cloudinary_url 
         )
 
         db.session.add(new_photo)
@@ -379,7 +383,7 @@ def set_password():
         pw1 = request.form.get('password')
         pw2 = request.form.get('confirm_password')
 
-        # Validation
+        
         if pw1 != pw2:
             flash('Passwords do not match.', 'error')
         elif len(pw1) < 8:
@@ -527,9 +531,6 @@ def complete_request(appointment_id):
     db.session.commit()
 
     return jsonify({'message': 'Appointment marked as Completed'})
-
-
-
 
 
 if __name__ == '__main__':
