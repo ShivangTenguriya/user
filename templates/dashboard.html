@@ -5,16 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Provider Profile & Requests</title>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
 <style>
-  /* Your provided styles */
   body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI',
+    Tahoma, Geneva, Verdana,
+    sans-serif;
     margin: 0;
     background: #f5f7fa;
     color: #333;
     line-height: 1.6;
   }
+
+
 
   nav {
     position: fixed;
@@ -158,7 +160,6 @@
     background-color: #0056b3;
   }
 
-  /* Lightbox modal */
   #lightboxModal {
     display: none;
     position: fixed;
@@ -203,7 +204,7 @@
     right: 15px;
   }
 
-  /* Requests Tabs */
+  
   #requestsSection {
     margin-top: 1rem;
   }
@@ -248,7 +249,7 @@
     margin-right: 0.5rem;
   }
 
-  /* Cancel / Reschedule Modal */
+  
   #cancelRescheduleModal {
     display: none;
     position: fixed;
@@ -287,7 +288,6 @@
   display: inline-block;
 }
 
-/* Dropdown button (styled like others) */
 .dropbtn {
   background: none;
   border: none;
@@ -296,7 +296,7 @@
   font-size: 16px;
 }
 
-/* Dropdown content (hidden by default) */
+
 .dropdown-content {
   display: none;
   position: absolute;
@@ -307,7 +307,6 @@
   right: 0;
 }
 
-/* Dropdown links */
 .dropdown-content a {
   color: black;
   padding: 10px 15px;
@@ -315,12 +314,10 @@
   display: block;
 }
 
-/* Show dropdown on hover */
 .dropdown:hover .dropdown-content {
   display: block;
 }
 
-/* Optional: Hover effect on links */
 .dropdown-content a:hover {
   background-color: #f1f1f1;
 }
@@ -339,7 +336,6 @@
     <button id="tabProfileBtn" class="active">Profile</button>
     <button id="tabRequestsBtn">View Requests</button>
 
-    <!-- Support Dropdown -->
     <div class="dropdown">
       <button id="tabSupportBtn" class="dropbtn">Support</button>
       <div class="dropdown-content">
@@ -352,102 +348,95 @@
 </nav>
 
 <main>
-  <!-- Profile Section -->
-  <section id="profileSection">
-    <div class="card" id="profileView">
-      <h2>Your Public Profile</h2>
-      <p><strong>Username:</strong> <span id="providerName">Loading...</span></p>
-      <p><strong>Skills:</strong> <span id="viewSkills">—</span></p>
-      <div>
-        <strong>Work Photos:</strong>
-        <div class="photo-grid" id="publicPhotoGrid">Loading photos...</div>
-      </div>
-    </div>
-
-        <div class="card" id="profileEdit">
-      <h2>Edit Profile</h2>
-      <form id="profileForm">
-        <label for="skills">Your Skills</label>
-        <textarea id="skills" name="skills" rows="4" placeholder="e.g. Mobile Repair, Laptop Servicing..." required></textarea>
-        <button type="submit">Update Profile</button>
-      </form>
-    </div>
-
-    <div class="card" id="photoManager">
-      <h2>Manage Work Photographs</h2>
-      <form id="photoUploadForm" enctype="multipart/form-data">
-        <label for="workPhotos">Upload New Photos (JPEG/PNG)</label>
-        <input type="file" id="workPhotos" name="photos" multiple accept="image/*" />
-        <button type="submit">Upload Photos</button>
-      </form>
-      <div class="photo-grid" id="editPhotoGrid">Loading photos...</div>
-    </div>
-  </section>
-
-  <!-- Requests Section -->
-  <div id="requestTabs">
-  <button data-tab="new" class="active">New Requests</button>
-  <button data-tab="pending">Pending Requests</button>
-  <button data-tab="completed">Completed Requests</button>
-  <button data-tab="cancelled">Cancelled Requests</button>
-  <button data-tab="rescheduled">Rescheduled Requests</button> <!-- New Tab -->
-</div>
-
-
-    <ul id="requestsList">
-      <!-- Requests will be dynamically loaded here -->
-      <li>Loading requests...</li>
-    </ul>
-  </section>
-</main>
-
-<!-- Lightbox Modal -->
-<div id="lightboxModal">
-  <span class="close-btn" title="Close">&times;</span>
-  <span class="nav-arrow nav-prev" title="Previous">&#10094;</span>
-  <span class="nav-arrow nav-next" title="Next">&#10095;</span>
-  <img id="lightboxImage" src="" alt="Enlarged Photo" />
-</div>
-
-<!-- Cancel / Reschedule Modal -->
-<div id="cancelRescheduleModal">
-  <div class="modal-content">
-    <h3>Cancel or Reschedule Request</h3>
-    <form id="cancelRescheduleForm">
-      <input type="hidden" id="cancelRequestId" />
-
-      <label>
-        <input type="radio" name="actionType" value="cancel" checked />
-        Cancel Request
-      </label><br />
-      <label>
-        <input type="radio" name="actionType" value="reschedule" />
-        Reschedule Request
-      </label>
-
-      <div id="cancelReasonGroup" style="margin-top: 1rem;">
-        <label for="cancelReason">Cancel Reason</label>
-        <textarea id="cancelReason" rows="3" placeholder="Reason for cancellation..." required></textarea>
+    
+    <section id="profileSection">
+      <div class="card" id="profileView">
+        <h2>Your Public Profile</h2>
+        <p><strong>Username:</strong> <span id="providerName">Loading...</span></p>
+        <p><strong>Skills:</strong> <span id="viewSkills">—</span></p>
+        <div>
+          <strong>Work Photos:</strong>
+          <div class="photo-grid" id="publicPhotoGrid">Loading photos...</div>
+        </div>
       </div>
 
-      <div id="rescheduleGroup" style="display:none; margin-top: 1rem;">
-  <label for="rescheduleTime">Reschedule Date & Time</label>
-  <input type="datetime-local" id="rescheduleTime" />
-
-  <label for="rescheduleReason" style="margin-top: 0.5rem;">Reschedule Reason</label>
-  <textarea id="rescheduleReason" rows="3" placeholder="Reason for rescheduling..."></textarea>
-</div>
-
-      <div style="margin-top:1rem; text-align:right;">
-        <button type="button" id="cancelModalCloseBtn">Close</button>
-        <button type="submit">Submit</button>
+      <div class="card" id="profileEdit">
+        <h2>Edit Profile</h2>
+        <form id="profileForm">
+          <label for="skills">Your Skills</label>
+          <textarea id="skills" name="skills" rows="4" placeholder="e.g. Mobile Repair, Laptop Servicing..." required></textarea>
+          <button type="submit">Update Profile</button>
+        </form>
       </div>
-    </form>
+
+      <div class="card" id="photoManager">
+        <h2>Manage Work Photographs</h2>
+        <form id="photoUploadForm" enctype="multipart/form-data">
+          <label for="workPhotos">Upload New Photos (JPEG/PNG)</label>
+          <input type="file" id="workPhotos" name="photos" multiple accept="image/*" />
+          <button type="submit">Upload Photos</button>
+        </form>
+        <div class="photo-grid" id="editPhotoGrid">Loading photos...</div>
+      </div>
+    </section>
+
+   
+    <section id="requestsSection" style="display: none;">
+      <div id="requestTabs">
+        <button data-tab="new" class="active">New Requests</button>
+        <button data-tab="pending">Pending Requests</button>
+        <button data-tab="completed">Completed Requests</button>
+        <button data-tab="cancelled">Cancelled Requests</button>
+        <button data-tab="rescheduled">Rescheduled Requests</button>
+      </div>
+
+      <div id="totalAmountCollected" style="margin: 1rem 0; font-weight: bold; display: none;">
+        💰 Total Amount Collected: <span id="amountCollectedValue">0</span>
+      </div>
+
+      <ul id="requestsList">
+        <li>Loading requests...</li>
+      </ul>
+    </section>
+  </main>
+
+  <div id="lightboxModal" class="modal">
+    <span class="close-btn" title="Close">&times;</span>
+    <span class="nav-arrow nav-prev" title="Previous">&#10094;</span>
+    <span class="nav-arrow nav-next" title="Next">&#10095;</span>
+    <img id="lightboxImage" src="" alt="Enlarged Photo" />
   </div>
-</div>
 
-<!-- ✅ Billing Modal should be OUTSIDE the cancel modal -->
-<div id="billingModal" class="modal" style="display: none;">
+  <div id="cancelRescheduleModal" class="modal">
+    <div class="modal-content">
+      <h3>Cancel or Reschedule Request</h3>
+      <form id="cancelRescheduleForm">
+        <input type="hidden" id="cancelRequestId" />
+        <label><input type="radio" name="actionType" value="cancel" checked /> Cancel Request</label><br />
+        <label><input type="radio" name="actionType" value="reschedule" /> Reschedule Request</label>
+
+        <div id="cancelReasonGroup" style="margin-top: 1rem;">
+          <label for="cancelReason">Cancel Reason</label>
+          <textarea id="cancelReason" rows="3" placeholder="Reason for cancellation..." required></textarea>
+        </div>
+
+        <div id="rescheduleGroup" style="display:none; margin-top: 1rem;">
+          <label for="rescheduleTime">Reschedule Date & Time</label>
+          <input type="datetime-local" id="rescheduleTime" />
+          <label for="rescheduleReason" style="margin-top: 0.5rem;">Reschedule Reason</label>
+          <textarea id="rescheduleReason" rows="3" placeholder="Reason for rescheduling..."></textarea>
+        </div>
+
+        <div style="margin-top:1rem; text-align:right;">
+          <button type="button" id="cancelModalCloseBtn">Close</button>
+          <button type="submit">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <div id="billingModal" class="modal" style="display: none;">
   <div class="modal-content">
     <h3>Generate Bill</h3>
     <form id="billingForm">
@@ -477,11 +466,13 @@
 
       <div style="text-align: right; margin-top: 1rem;">
         <button type="button" onclick="closeBillingModal()">Cancel</button>
-        <button type="submit">Submit Bill</button>
+        <button type="button" onclick="markCODPartialPayment(8)">Pay by Cash</button>
+        <button type="submit">Pay Online</button>
       </div>
     </form>
   </div>
 </div>
+
 <script>
 const tabProfileBtn = document.getElementById('tabProfileBtn');
 const tabRequestsBtn = document.getElementById('tabRequestsBtn');
@@ -503,7 +494,7 @@ tabRequestsBtn.addEventListener('click', () => {
   loadRequests('new');
 });
 
-// Lightbox logic
+
 const lightboxModal = document.getElementById('lightboxModal');
 const lightboxImage = document.getElementById('lightboxImage');
 const closeBtn = lightboxModal.querySelector('.close-btn');
@@ -512,6 +503,22 @@ const nextBtn = lightboxModal.querySelector('.nav-next');
 
 let currentIndex = 0;
 let photoList = [];
+
+function showSection(sectionId) {
+      const allSections = document.querySelectorAll('main > section');
+      allSections.forEach(sec => sec.style.display = 'none');
+
+      const target = document.getElementById(sectionId);
+      if (target) target.style.display = 'block';
+
+      if (sectionId === 'requestsSection') {
+        loadRequests('new');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      showSection('profileSection');
+    });
 
 function openLightbox(src, index) {
   currentIndex = index;
@@ -614,7 +621,6 @@ async function loadProfile() {
   }
 }
 
-// Update Profile
 document.getElementById('profileForm').addEventListener('submit', async e => {
   e.preventDefault();
   const skills = document.getElementById('skills').value.trim();
@@ -634,7 +640,6 @@ document.getElementById('profileForm').addEventListener('submit', async e => {
   }
 });
 
-// Upload photos
 document.getElementById('photoUploadForm').addEventListener('submit', async e => {
   e.preventDefault();
   const files = document.getElementById('workPhotos').files;
@@ -695,8 +700,45 @@ requestTabs.forEach(btn => {
 
 let currentRequests = [];
 
+async function markRequestPending(requestId) {
+  try {
+    const res = await fetch(`/provider/accept_request/${requestId}`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+    if (!res.ok) throw new Error('Failed to accept request');
+    alert('Request moved to Pending.');
+    loadRequests('new');
+  } catch (err) {
+    alert('Error accepting request.');
+    console.error(err);
+  }
+}
+
 async function loadRequests(status) {
   requestsList.innerHTML = '<li>Loading requests...</li>';
+
+  const totalAmountDiv = document.getElementById('totalAmountCollected');
+  if (status === 'completed') {
+    try {
+      const totalRes = await fetch('/api/completed-total', { credentials: 'include' });
+      if (!totalRes.ok) throw new Error('Failed to fetch total amount');
+      const totalData = await totalRes.json();
+
+      const amount = new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR'
+      }).format(totalData.totalAmount || 0);
+
+      document.getElementById('amountCollectedValue').textContent = amount;
+      totalAmountDiv.style.display = 'block';
+    } catch (err) {
+      console.error('Error fetching total amount:', err);
+      totalAmountDiv.style.display = 'none';
+    }
+  } else {
+    totalAmountDiv.style.display = 'none';
+  }
 
   try {
     const res = await fetch(`/provider/requests?status=${status}`, { credentials: 'include' });
@@ -742,21 +784,6 @@ async function loadRequests(status) {
   }
 }
 
-async function markRequestPending(requestId) {
-  try {
-    const res = await fetch(`/provider/accept_request/${requestId}`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-    if (!res.ok) throw new Error('Failed to accept request');
-    alert('Request moved to Pending.');
-    loadRequests('new');
-  } catch (err) {
-    alert('Error accepting request.');
-    console.error(err);
-  }
-}
-
 // ------------------------ Billing ------------------------
 
 function openBillingModal(appointment) {
@@ -772,11 +799,124 @@ function openBillingModal(appointment) {
     </tr>
   `;
 
+  
+  const payOnlineBtn = document.querySelector('#billingModal button[type="submit"]');
+  if (appointment.payment_status) {
+    payOnlineBtn.disabled = true;
+    payOnlineBtn.textContent = "Already Paid";
+  } else {
+    payOnlineBtn.disabled = false;
+    payOnlineBtn.textContent = "Pay Online";
+  }
+
+  
+  window.currentAppointmentId = appointment.id;
+
   document.getElementById('billingModal').style.display = 'block';
 }
 
 function closeBillingModal() {
   document.getElementById('billingModal').style.display = 'none';
+}
+
+async function markCODPartialPayment(percentage = 8) {
+  const appointmentId = window.currentAppointmentId;
+  const rows = document.querySelectorAll('#billingTable tbody tr');
+
+  const services = [];
+  let total = 0;
+
+  
+  rows.forEach(row => {
+    const name = row.querySelector('input[name="service_name"]').value.trim();
+    const amount = parseFloat(row.querySelector('input[name="amount"]').value);
+    if (name && !isNaN(amount)) {
+      services.push({ name, amount });
+      total += amount;
+    }
+  });
+
+  if (services.length === 0) {
+    alert("Please add at least one valid service.");
+    return;
+  }
+
+  try {
+    const billRes = await fetch(`/provider/generate_bill/${appointmentId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ services })
+    });
+
+    const billData = await billRes.json();
+    if (!billRes.ok) {
+      alert(billData.error || "Failed to generate bill");
+      return;
+    }
+
+    const partialAmount = (total * percentage) / 100;
+
+    const orderRes = await fetch('/api/create-razorpay-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ amount: partialAmount })
+    });
+
+    const orderData = await orderRes.json();
+    if (!orderRes.ok) {
+      alert(orderData.error || 'Failed to create Razorpay order');
+      return;
+    }
+
+    const options = {
+      key: "rzp_test_RSxfGTzcEkNRQU", 
+      amount: orderData.amount,
+      currency: "INR",
+      name: "Care N Trust",
+      description: `Partial COD Payment (${percentage}%)`,
+      order_id: orderData.id,
+      handler: async function(response) {
+        const verifyRes = await fetch('/provider/mark_cod_paid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            appointment_id: appointmentId,
+            razorpay_payment_id: response.razorpay_payment_id,
+            partial_amount: partialAmount
+          })
+        });
+
+        const verifyData = await verifyRes.json();
+        if (verifyRes.ok && verifyData.success) {
+          alert("✅ Partial COD paid successfully! Appointment marked as paid.");
+          closeBillingModal();
+          location.reload();
+        } else {
+          alert("❌ Payment verification failed: " + (verifyData.error || ""));
+        }
+      },
+      prefill: {
+        name: "Patient Name",
+        email: "patient@example.com",
+        contact: "9876543210"
+      },
+      theme: { color: "#0e76a8" }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+
+    rzp.on('payment.failed', function (response) {
+      alert("❌ Payment failed: " + response.error.description);
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("Something went wrong during partial COD payment.");
+  }
 }
 
 function addBillingRow() {
@@ -835,30 +975,26 @@ document.getElementById('billingForm').addEventListener('submit', async function
 
     alert(`Bill generated: ₹${data.total}`);
 
-    
     const orderRes = await fetch('/api/create-razorpay-order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ amount: total }) // INR
+      body: JSON.stringify({ amount: total })
     });
 
     const orderData = await orderRes.json();
-
     if (!orderRes.ok) {
       alert(orderData.error || 'Failed to create Razorpay order');
       return;
     }
 
-    
     const options = {
       key: "rzp_test_RSxfGTzcEkNRQU", 
-      amount: orderData.amount,     
+      amount: orderData.amount,
       currency: "INR",
       name: "Care N Trust",
       description: "Appointment Billing",
-      //image: "https://yourdomain.com/logo.png", 
-      order_id: orderData.id, 
+      order_id: orderData.id,
       handler: async function (response) {
         const verifyRes = await fetch('/api/verify_payment', {
           method: 'POST',
@@ -868,7 +1004,7 @@ document.getElementById('billingForm').addEventListener('submit', async function
             razorpay_payment_id: response.razorpay_payment_id,
             razorpay_order_id: response.razorpay_order_id,
             razorpay_signature: response.razorpay_signature,
-            appointment_id: yourAppointmentIdHere  
+            appointment_id: appointmentId
           })
         });
 
@@ -880,23 +1016,20 @@ document.getElementById('billingForm').addEventListener('submit', async function
         }
       },
       prefill: {
-        name: "Patient Name",  
+        name: "Patient Name",
         email: "patient@example.com",
         contact: "9876543210"
       },
-      theme: {
-        color: "#0e76a8"
-      }
+      theme: { color: "#0e76a8" }
     };
 
     const rzp = new Razorpay(options);
     rzp.open();
 
-     rzp.on('payment.failed', function (response) {
+    rzp.on('payment.failed', function (response) {
       alert("❌ Payment failed: " + response.error.description);
     });
 
-    // Cleanup
     closeBillingModal();
     loadRequests('pending');
 
@@ -919,7 +1052,6 @@ const rescheduleTimeInput = document.getElementById('rescheduleTime');
 const rescheduleReasonInput = document.getElementById('rescheduleReason');
 const cancelModalCloseBtn = document.getElementById('cancelModalCloseBtn');
 
-
 function openCancelRescheduleModal(requestId, status) {
   cancelModal.style.display = 'flex';
   cancelRequestIdInput.value = requestId;
@@ -933,7 +1065,7 @@ function openCancelRescheduleModal(requestId, status) {
   
   status = status.toLowerCase();
 
-  
+
   cancelRadio.disabled = false;
   rescheduleRadio.disabled = false;
   cancelRadio.checked = false;
@@ -961,12 +1093,10 @@ function openCancelRescheduleModal(requestId, status) {
     rescheduleRadio.title = 'This request cannot be rescheduled.';
   }
 
-  
   cancelReasonInput.required = cancelRadio.checked && !cancelRadio.disabled;
   rescheduleTimeInput.required = rescheduleRadio.checked && !rescheduleRadio.disabled;
   rescheduleReasonInput.required = rescheduleRadio.checked && !rescheduleRadio.disabled;
 }
-
 
 cancelModalCloseBtn.addEventListener('click', () => {
   cancelModal.style.display = 'none';
@@ -1042,11 +1172,9 @@ cancelRescheduleForm.addEventListener('submit', async e => {
   }
 });
 
-
 loadProfile();
 
 </script>
 
 </body>
 </html>
-

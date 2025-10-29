@@ -1,9 +1,9 @@
-import os, sys, random, razorpay
+import os, sys, random, razorpay, hmac, hashlib
 from dotenv import load_dotenv
 import cloudinary.uploader
 import smtplib, traceback
 from sqlalchemy import or_
-from datetime import datetime
+from datetime import datetime, UTC
 from email.mime.text import MIMEText
 from flask_login import login_required, LoginManager, login_user, current_user
 from flask import Flask, request, jsonify, render_template, redirect, session, url_for, flash, abort
@@ -164,11 +164,11 @@ def provider_apply1():
 
         provider = ServiceProvider(
             username=form.get('email').lower(),
-            email=form.get('email'),
+            email=form.get('email').lower(),
             phone_number=form.get('phone'),
             aadhar=aadhar,
-            name=form.get('owner_name'),
-            address=form.get('shop_location'),
+            name=form.get('owner_name').upper(),
+            address=form.get('shop_location').upper(),
             documents=str([gst_doc_url, aadhar_doc_url] + uploaded_additional_docs),
             approved=False
         )
@@ -325,7 +325,7 @@ def send_email(to_email, subject, body):
 
 @app.route('/provider/verify_email', methods=['POST'])
 def verify_email():
-    username = request.form.get('username')  
+    username = request.form.get('username').lower()
     if not username:
         return jsonify({"error": "Username is required"}), 400
 
@@ -404,7 +404,7 @@ def set_password():
 
             return redirect(url_for('provider_login'))
 
-    return render_template('set_password.html')
+    return render_template('login.html')
 
 
 
@@ -458,10 +458,8 @@ def cancel_request(appointment_id):
     appointment = Appointment.query.filter_by(id=appointment_id, provider_id=current_user.id).first()
     if not appointment:
         abort(404, description="Appointment not found")
-
-    
-    if appointment.status not in ['New', 'Pending', 'Pending_Rescheduled']:
-        abort(400, description="Only new or pending appointments can be cancelled")
+    if appointment.status != 'New':
+        abort(400, description="Only new appointments can be cancelled")
 
     data = request.get_json()
     reason = data.get('reason')
@@ -481,21 +479,30 @@ def reschedule_request(appointment_id):
     appointment = Appointment.query.filter_by(id=appointment_id, provider_id=current_user.id).first()
     if not appointment:
         abort(404, description="Appointment not found")
-    if appointment.status != 'New':
-        abort(400, description="Only new appointments can be rescheduled")
+
+    if appointment.status not in ['New', 'Pending']:
+        abort(400, description="Only 'new' or 'pending' appointments can be rescheduled")
 
     data = request.get_json()
     new_date_str = data.get('newDate')
-    if not new_date_str:
-        abort(400, description="New date and time is required")
+    reason = data.get('reason')
+
+    if not new_date_str or not reason:
+        abort(400, description="Both reschedule date and reason are required")
 
     try:
         new_date = datetime.fromisoformat(new_date_str)
     except ValueError:
-        abort(400, description="Invalid date format, expected ISO 8601")
+        abort(400, description="Invalid date format. Expected ISO 8601 datetime.")
 
+    if new_date < datetime.now():
+        abort(400, description="Reschedule date must be in the future")
+
+    
     appointment.status = 'Rescheduled'
-    appointment.reschedule_time = new_date
+    appointment.reschedule_time = new_date  
+    appointment.reschedule_reason = reason  
+
     db.session.commit()
 
     return jsonify({'message': 'Appointment rescheduled successfully'})
@@ -532,6 +539,140 @@ def complete_request(appointment_id):
 
     return jsonify({'message': 'Appointment marked as Completed'})
 
+@app.route('/provider/generate_bill/<int:appointment_id>', methods=['POST'])
+@login_required
+def generate_bill(appointment_id):
+    data = request.get_json()
+    services = data.get('services', [])
+
+    if not services or not isinstance(services, list):
+        return jsonify({'error': 'No valid services provided'}), 400
+
+    total = 0
+    for service in services:
+        name = service.get('name')
+        amount = service.get('amount')
+        if not name or not isinstance(amount, (int, float)) or amount <= 0:
+            return jsonify({'error': 'Invalid service format'}), 400
+        total += amount
+
+    
+    appointment = Appointment.query.get(appointment_id)
+    if not appointment:
+        return jsonify({'error': 'Appointment not found'}), 404
+
+    appointment.amount = total
+    appointment.payment_status = False 
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Bill generated successfully',
+        'total': total,
+        'appointment_id': appointment.id
+    })
+
+@app.route('/api/create-razorpay-order', methods=['POST'])
+@login_required
+def create_razorpay_order():
+    data = request.get_json()
+    amount = data.get('amount')
+    appointment_id = data.get('appointment_id')
+
+    if not isinstance(amount, (int, float)) or amount <= 0:
+        return jsonify({'error': 'Invalid amount'}), 400
+
+    try:
+        order = razorpay_client.order.create({
+            'amount': int(amount * 100),  
+            'currency': 'INR',
+            'receipt': f'receipt_{datetime.now(UTC).timestamp()}',
+            'payment_capture': 1
+        })
+        
+
+        
+        appointment = Appointment.query.get(appointment_id)
+        if appointment:
+            appointment.order_id = order['id']
+            db.session.commit()
+
+        return jsonify(order)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+
+@app.route('/api/verify_payment', methods=['POST'])
+def verify_payment():
+    data = request.get_json()
+
+    
+    payment_id = data.get('razorpay_payment_id')
+    order_id = data.get('razorpay_order_id')
+    signature = data.get('razorpay_signature')
+    appointment_id = data.get('appointment_id')
+
+    if not all([payment_id, order_id, signature, appointment_id]):
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    expected_signature = hmac.new(
+        RAZORPAY_KEY_SECRET.encode(),
+        f"{order_id}|{payment_id}".encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    if expected_signature != signature:
+        return jsonify({'error': 'Payment verification failed'}), 400
+
+    
+    appointment = Appointment.query.get(appointment_id)
+    if not appointment:
+        return jsonify({'error': 'Appointment not found'}), 404
+
+    appointment.payment_id = payment_id
+    appointment.payment_status = True
+    db.session.commit()
+
+    return jsonify({
+        'message': 'Payment verified and saved successfully',
+        'appointment_id': appointment.id
+    }), 200
+
+
+@app.route('/api/completed-total', methods=['GET'])
+def get_total_collected():
+    try:
+        total_paise = db.session.query(
+            db.func.sum(Appointment.amount)
+        ).filter_by(
+            payment_status=True,
+            status='Completed'  
+        ).scalar() or 0
+
+        total_rupees = total_paise / 100
+
+        return jsonify({ "totalAmount": total_rupees })
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({ "error": "Internal server error" }), 500
+
+@app.route('/provider/mark_cod_paid/<int:appointment_id>', methods=['POST'])
+@login_required
+def mark_cod_paid(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    data = request.get_json()
+    amount = data.get('amount')
+
+    if amount:
+        appointment.amount = float(amount)
+
+    appointment.payment_id = "COD"
+    appointment.payment_status = True
+    appointment.status = "Completed"
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "COD payment marked successfully"})
 
 if __name__ == '__main__':
     app.run(host="localhost", port=5001)
