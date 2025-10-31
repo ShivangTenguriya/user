@@ -531,6 +531,7 @@ def complete_request(appointment_id):
     if not appointment:
         abort(404, description="Appointment not found")
 
+
     if appointment.status not in ['Pending', 'Pending_Rescheduled']:
         abort(400, description="Only pending or rescheduled pending appointments can be marked as completed")
 
