@@ -325,10 +325,12 @@ def send_email(to_email, subject, body):
 @app.route('/provider/verify_email', methods=['POST'])
 def verify_email():
     username = request.form.get('username').lower()
+    print(username)
     if not username:
         return jsonify({"error": "Username is required"}), 400
 
     provider = ServiceProvider.query.filter_by(username=username).first()
+    print(provider)
 
     if not provider:
         flash("Provider not found", "error")
@@ -648,9 +650,8 @@ def get_total_collected():
             status='Completed'  
         ).scalar() or 0
 
-        total_rupees = total_paise / 100
 
-        return jsonify({ "totalAmount": total_rupees })
+        return jsonify({ "totalAmount": total_paise })
 
     except Exception as e:
         print("Error:", e)
@@ -674,4 +675,4 @@ def mark_cod_paid(appointment_id):
     return jsonify({"success": True, "message": "COD payment marked successfully"})
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=5001)
+    app.run()
