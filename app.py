@@ -325,12 +325,10 @@ def send_email(to_email, subject, body):
 @app.route('/provider/verify_email', methods=['POST'])
 def verify_email():
     username = request.form.get('username').lower()
-    print(username)
     if not username:
         return jsonify({"error": "Username is required"}), 400
 
     provider = ServiceProvider.query.filter_by(username=username).first()
-    print(provider)
 
     if not provider:
         flash("Provider not found", "error")
@@ -375,6 +373,8 @@ def verify_code():
 
 @app.route('/set_password', methods=['GET', 'POST'])
 def set_password():
+    if request.method == 'GET':
+        return render_template('set_password.html')
     if 'username' not in session:
         return redirect(url_for('provider_login'))
 
@@ -405,7 +405,7 @@ def set_password():
 
             return redirect(url_for('provider_login'))
 
-    return render_template('login.html')
+    return render_template('set_password.html')
 
 
 
@@ -531,7 +531,7 @@ def complete_request(appointment_id):
     if not appointment:
         abort(404, description="Appointment not found")
 
-
+    
     if appointment.status not in ['Pending', 'Pending_Rescheduled']:
         abort(400, description="Only pending or rescheduled pending appointments can be marked as completed")
 
@@ -643,9 +643,11 @@ def verify_payment():
 @app.route('/api/completed-total', methods=['GET'])
 def get_total_collected():
     try:
+        user = current_user
         total_paise = db.session.query(
             db.func.sum(Appointment.amount)
         ).filter_by(
+            provider_id = user.id,
             payment_status=True,
             status='Completed'  
         ).scalar() or 0
