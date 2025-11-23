@@ -1,4 +1,4 @@
-import os, sys, random, razorpay, hmac, hashlib
+import os, sys, random, razorpay, hmac, hashlib, requests
 from dotenv import load_dotenv
 import cloudinary.uploader
 import smtplib, traceback
@@ -34,6 +34,8 @@ db.init_app(app)
 RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+USER_BACKEND_SECRET = os.getenv('Secret_key_user')
+USER_BACKEND_URL = 'http://127.0.0.1:5000/payment_confirm_user'
 
 
 login_manager = LoginManager()
@@ -125,7 +127,7 @@ def check_aadhar():
 def provider_apply1():
     try:
         form = request.form
-        required_fields = ['shop_location', 'owner_name', 'phone', 'email', 'aadhar']
+        required_fields = ['shop_location', 'owner_name', 'phone', 'email', 'aadhar', 'upi']
         for field in required_fields:
             if not form.get(field):
                 return jsonify({'error': f'Missing field: {field}'}), 400
@@ -166,6 +168,7 @@ def provider_apply1():
             email=form.get('email').lower(),
             phone_number=form.get('phone'),
             aadhar=aadhar,
+            upi=form.get('upi'),
             name=form.get('owner_name').upper(),
             address=form.get('shop_location').upper(),
             documents=str([gst_doc_url, aadhar_doc_url] + uploaded_additional_docs),
@@ -603,19 +606,17 @@ def create_razorpay_order():
         return jsonify({'error': str(e)}), 500
     
 
-@app.route('/api/verify_payment', methods=['POST'])
-def verify_payment():
+@app.route('/payment/success', methods=['POST'])
+@login_required
+def payment_success():
     data = request.get_json()
+    payment_id = data.get("razorpay_payment_id")
+    order_id = data.get("razorpay_order_id")
+    signature = data.get("razorpay_signature")
+    appointment_id = data.get("appointment_id")
+    user_id = data.get("user_id")
 
-    
-    payment_id = data.get('razorpay_payment_id')
-    order_id = data.get('razorpay_order_id')
-    signature = data.get('razorpay_signature')
-    appointment_id = data.get('appointment_id')
-
-    if not all([payment_id, order_id, signature, appointment_id]):
-        return jsonify({'error': 'Missing required fields'}), 400
-
+    # Verify Razorpay signature
     expected_signature = hmac.new(
         RAZORPAY_KEY_SECRET.encode(),
         f"{order_id}|{payment_id}".encode(),
@@ -623,24 +624,31 @@ def verify_payment():
     ).hexdigest()
 
     if expected_signature != signature:
-        return jsonify({'error': 'Payment verification failed'}), 400
+        return jsonify({"error": "Payment verification failed"}), 400
 
-    
-    appointment = Appointment.query.get(appointment_id)
-    if not appointment:
-        return jsonify({'error': 'Appointment not found'}), 404
+    # Call USER backend
+    payload = {
+        "appointment_id": appointment_id,
+        "payment_id": payment_id,
+        "user_id": user_id,
+        "provider_secret": USER_BACKEND_SECRET
+    }
 
-    appointment.payment_id = payment_id
-    appointment.payment_status = True
-    db.session.commit()
+    try:
+        response = requests.post(USER_BACKEND_URL, json=payload)
+        response.raise_for_status()
+    except Exception as e:
+        return jsonify({"error": "Failed to notify user backend", "details": str(e)}), 500
 
+    coupon_data = response.json()
     return jsonify({
-        'message': 'Payment verified and saved successfully',
-        'appointment_id': appointment.id
+        "message": "Payment verified and coupon sent to user",
+        "coupon": coupon_data
     }), 200
 
 
 @app.route('/api/completed-total', methods=['GET'])
+@login_required
 def get_total_collected():
     try:
         user = current_user

@@ -25,18 +25,20 @@ class ServiceProvider(db.Model,  UserMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)  # Provider email
+    email = db.Column(db.String(120), unique=True, nullable=False)  
     password_hash = db.Column(db.String(256), nullable=False)
     name = db.Column(db.String(120))
     phone_number = db.Column(db.String(20))
     aadhar = db.Column(db.String(12))
+    upi = db.Column(db.String(15), nullable=False)
     address = db.Column(db.String(250))
     experience_years = db.Column(db.Integer)
-    skills = db.Column(db.Text)  # comma separated or JSON string
+    skills = db.Column(db.Text) 
 
-    userphoto = db.Column(db.String(250))  # file path or URL to uploaded photo
-    documents = db.Column(db.Text)  # JSON string list of PDF filenames/paths
+    userphoto = db.Column(db.String(250))  
+    documents = db.Column(db.Text)  
     document_type = db.Column(db.String(20), default='pdf')
+    payment_id = db.Column(db.String(120))
 
     approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -84,7 +86,9 @@ class Appointment(db.Model):
     purchase_date = db.Column(db.Date)
     problem_description = db.Column(db.Text)
     preferred_time = db.Column(db.DateTime)
-    status = db.Column(db.String(20), default='New')  # New, Pending, Completed, Cancelled, Rescheduled
+    status = db.Column(db.String(20), default='New')  
+    upi_status = db.Column(db.Boolean, default = False)
+    admin_pay_id = db.Column(db.String(50))
     cancel_reason = db.Column(db.Text, nullable=True)
     reschedule_reason = db.Column(db.Text, nullable = False)
     reschedule_time = db.Column(db.DateTime, nullable=True)
@@ -110,8 +114,21 @@ class ProviderProfileWork(db.Model):
     provider_id = db.Column(db.Integer, db.ForeignKey('service_provider.id'), nullable=False)
     title = db.Column(db.String(150))
     description = db.Column(db.Text)
-    image_path = db.Column(db.String(250))  # Path or URL of the work image
+    image_path = db.Column(db.String(250))  
 
     provider = db.relationship('ServiceProvider', back_populates='works')
 
+
+class Coupon(db.Model):
+    __tablename__ = 'coupon'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False)        
+    appointment_id = db.Column(db.Integer, nullable=False) 
+    coupon_code = db.Column(db.String(20), unique=True)     
+    expiry_date = db.Column(db.DateTime, nullable=False)
+    value = db.Column(db.Integer, default=10)             
+    status = db.Column(db.String(20), default="unused")   
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    discount = db.Column(db.Integer)
 
