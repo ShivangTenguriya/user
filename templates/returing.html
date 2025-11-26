@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Provider Registration - RepairService</title>
+  <title>Provider Registration - CARE N TRUST</title>
   <style>
     /* Same styling as before, with added sections and visibility toggling */
     body {
@@ -131,7 +131,7 @@
 <body>
 
   <nav>
-    <div class="logo">RepairService</div>
+    <div class="logo">CARE N TRUST</div>
     <div class="nav-links">
       <a href="/provider/login">Login</a>
       <a href="/provider/verify">Verify E-Mail</a>
@@ -219,6 +219,7 @@ async function checkAadhar() {
     });
 
     const data = await response.json();
+    console.log(data)
     if (!response.ok) throw new Error(data.error || 'Server error');
 
     if (data.exists) {

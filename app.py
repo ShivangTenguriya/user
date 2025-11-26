@@ -1,15 +1,16 @@
-import os, sys, random, razorpay, hmac, hashlib, requests
-from dotenv import load_dotenv
-import cloudinary.uploader
-import smtplib, traceback
+import traceback
 from sqlalchemy import or_
+import cloudinary.uploader
+from threading import Thread
+from dotenv import load_dotenv
 from datetime import datetime, UTC
-from email.mime.text import MIMEText
-from flask_login import login_required, LoginManager, login_user, current_user
-from flask import Flask, request, jsonify, render_template, redirect, session, url_for, flash, abort
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
+import os, sys, random, razorpay, hmac, hashlib, requests
 from models import db, ServiceProvider, ProviderProfileWork, Appointment
+from flask_login import login_required, LoginManager, login_user, current_user
+from flask import Flask, request, jsonify, render_template, redirect, session, url_for, flash, abort
+
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if BASE_DIR not in sys.path:
@@ -20,7 +21,7 @@ load_dotenv()
 app.secret_key = os.getenv('secret_key')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('url_db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAX_CONTENT_LENGTH'] =  1 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 1 * 1024 * 1024
 app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'jpg', 'jpeg', 'png'}
 
 cloudinary.config(
@@ -35,7 +36,8 @@ RAZORPAY_KEY_ID = os.getenv('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.getenv('RAZORPAY_KEY_SECRET')
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 USER_BACKEND_SECRET = os.getenv('Secret_key_user')
-USER_BACKEND_URL = 'http://127.0.0.1:5000/payment_confirm_user'
+USER_BACKEND_URL = os.getenv('url')
+
 
 
 login_manager = LoginManager()
@@ -54,25 +56,29 @@ def get_logged_in_provider():
         return None
     return ServiceProvider.query.get(provider_id)
 
-def send_verification_email(to_email, code):
-    smtp_server = os.getenv('server')
-    smtp_port = os.getenv('port')
-    sender_email = os.getenv('email')
-    sender_password = os.getenv('password') 
+def send_email(to_email, subject, body):
+    thread = Thread(target=(send_verification_email), args=(to_email, subject, body))
+    thread.daemon
+    thread.start()
 
-    subject = "OTP for E-Mail verification"
-    body = f"Your OTP for E-Mail verification is {code} valid only for 2 minutes. Do not share with anyone."
+def send_verification_email(to_email, subject, body):
+    sender = os.getenv('email')
+     
 
-    msg = MIMEText(body)
-    msg['Subject'] = subject
-    msg['From'] = sender_email
-    msg['To'] = to_email
+    url = os.getenv('url_mail')
+    payload = {
+        "sender": {"email": sender},
+        "to": [{"email": to_email}],
+        "subject": subject,
+        "htmlContent": body
+    }
+    headers = {
+        "accept": "application/json",
+        "api-key": os.getenv('api_key'),
+        "content-type": "application/json"
+    }
 
-    server = smtplib.SMTP(smtp_server, smtp_port)
-    server.starttls()
-    server.login(sender_email, sender_password)
-    server.sendmail(sender_email, to_email, msg.as_string())
-    server.quit()
+    requests.post(url, json=payload, headers=headers)
 
 @app.route('/')
 def home():
@@ -101,6 +107,7 @@ def unauthorized_callback():
 def check_aadhar():
     data = request.get_json()
     aadhar = data.get('aadhar')
+    
 
     if not aadhar or len(aadhar) != 12 or not aadhar.isdigit():
         return jsonify({'error': 'Invalid Aadhar number.'}), 400
@@ -174,7 +181,8 @@ def provider_apply1():
             documents=str([gst_doc_url, aadhar_doc_url] + uploaded_additional_docs),
             approved=False
         )
-        provider.set_password('xxxxxx')  
+        password=os.getenv("passw")
+        provider.set_password(password)  
         db.session.add(provider)
         db.session.commit()
 
@@ -242,6 +250,7 @@ def profile_page():
 
 
 @app.route('/provider/update_profile', methods=['POST'])
+@login_required
 def update_profile():
     user = current_user
     data = request.get_json()
@@ -295,6 +304,7 @@ def upload_photos():
 
 
 @app.route('/provider/delete_photo/<int:photo_id>', methods=['DELETE'])
+@login_required
 def delete_photo(photo_id):
     user = current_user
     photo = ProviderProfileWork.query.filter_by(id=photo_id, provider_id=user.id).first()
@@ -314,15 +324,11 @@ def delete_photo(photo_id):
 
 
 @app.route('/provider/logout')
+@login_required
 def provider_logout():
     session.pop('provider_id', None)
     flash('Logged out successfully.', 'success')
     return redirect(url_for('provider_login'))
-
-
-def send_email(to_email, subject, body):
-    print(f"Sending email to {to_email}:\nSubject: {subject}\nBody: {body}")
-
 
 
 @app.route('/provider/verify_email', methods=['POST'])
@@ -340,15 +346,16 @@ def verify_email():
     code = str(random.randint(100000, 999999))
     session['verification_code'] = code
     session['username'] = username
-
-    send_verification_email(provider.email, code)
-
+    subject = "OTP for E-Mail verification"
+    body = f"Your OTP for E-Mail verification is {code} valid only for 2 minutes. Do not share with anyone."
+    send_email(provider.email, subject, body)
     flash("Verification code sent to your email.", "info")
-    return render_template('verify.html')
+    return render_template('verify.html', email=username, otp_sent=True)
 
 @app.route('/provider/verify_code', methods=['POST'])
 def verify_code():
     code = request.form.get('code')
+
 
     if not code:
         flash("Verification code is required.", "error")

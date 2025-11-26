@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Verify Email - RepairService</title>
+  <title>Verify Email - CARE N TRUST</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -65,7 +65,7 @@
       font-weight: 600;
       text-align: left;
     }
-    form input[type="text"] {
+    form input[type="email"], form input[type="text"] {
       width: 100%;
       padding: 0.6rem 1rem;
       border: 1.7px solid #ccc;
@@ -99,23 +99,27 @@
       font-size: 0.95rem;
       padding: 0.75rem 1rem;
       border-radius: 6px;
+      text-align: left;
     }
     .error {
       color: #b71c1c;
       background-color: #ffcdd2;
-      text-align: left;
     }
     .info {
       color: #0d47a1;
       background-color: #bbdefb;
-      text-align: left;
+    }
+    hr {
+      margin: 2rem 0;
+      border: none;
+      border-top: 1px solid #eee;
     }
   </style>
 </head>
 <body>
 
   <nav>
-    <div class="logo" onclick="window.location.href='/'">RepairService</div>
+    <div class="logo" onclick="window.location.href='/'">CARE N TRUST</div>
     <div class="nav-links">
       <a href="/provider/login">Back to Login</a>
     </div>
@@ -123,7 +127,6 @@
 
   <main>
     <h2>Verify Your Email</h2>
-    <p>A verification code has been sent to your registered email. Please enter it below.</p>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -133,17 +136,41 @@
       {% endif %}
     {% endwith %}
 
+    <!-- Email input form: always visible -->
     <form method="POST" action="/provider/verify_email">
-      <label for="code">Enter you username</label>
-      <input type="text" id="username" name="username" placeholder="your registerted E-Mail" />
+      <label for="username">Enter your registered E-Mail</label><br>
+      <input
+        type="email"
+        id="username"
+        name="username"
+        placeholder="your registered E-Mail"
+        required
+        value="{{ email|e }}"
+      />
       <button type="submit">Get Code</button>
     </form>
 
-    <form method="POST" action="/provider/verify_code">
-      <label for="code">Verification Code</label>
-      <input type="text" id="code" name="code" required pattern="\d{6}" maxlength="6" placeholder="6-digit code" />
-      <button type="submit">Verify</button>
-    </form>
+    {% if otp_sent %}
+      <!-- Show this block only when OTP has been sent -->
+      <hr>
+      <form method="POST" action="/provider/verify_code">
+        <!-- Hidden email so backend knows which email the OTP is for -->
+        <input type="hidden" name="username" value="{{ email|e }}" />
+
+        <label for="code">Verification Code</label><br>
+        <input
+          type="text"
+          id="code"
+          name="code"
+          required
+          pattern="\d{6}"
+          maxlength="6"
+          placeholder="6-digit code"
+        />
+        <button type="submit">Verify</button>
+      </form>
+    {% endif %}
+
   </main>
 
 </body>
