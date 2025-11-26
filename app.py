@@ -181,7 +181,8 @@ def provider_apply1():
             documents=str([gst_doc_url, aadhar_doc_url] + uploaded_additional_docs),
             approved=False
         )
-        password=os.getenv("passw")
+        password=os.getenv('passw')
+        print(password)
         provider.set_password(password)  
         db.session.add(provider)
         db.session.commit()
