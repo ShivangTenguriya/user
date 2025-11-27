@@ -11,9 +11,9 @@
     Tahoma, Geneva, Verdana,
     sans-serif;
     margin: 0;
-    background: #f5f7fa;
+    background: #eef2f9;
     color: #333;
-    line-height: 1.6;
+    /* line-height: 1.6; */
   }
 
 
@@ -466,7 +466,7 @@
 
       <div style="text-align: right; margin-top: 1rem;">
         <button type="button" onclick="closeBillingModal()">Cancel</button>
-        <button type="button" onclick="markCODPartialPayment(8)">Pay by Cash</button>
+        <button type="button" onclick="markCODPartialPayment(2)">Pay by Cash</button>
         <button type="submit">Pay Online</button>
       </div>
     </form>
@@ -755,10 +755,14 @@ async function loadRequests(status) {
     currentRequests.forEach(req => {
       const li = document.createElement('li');
       li.innerHTML = `
-        <p><strong>Request ID:</strong> ${req.id}</p>
-        <p><strong>Customer:</strong> ${req.user_id || 'N/A'}</p>
-        <p><strong>Date:</strong> ${req.preferred_time || 'N/A'}</p>
-        <p><strong>Status:</strong> ${req.status}</p>
+        <strong>Request ID:</strong> ${req.id}<br>
+        <strong>Customer:</strong> ${req.user_id || 'N/A'}<br>
+        <strong>Problem:</strong> ${req.problem_description} <br>
+        <strong>Date:</strong> ${req.preferred_time || 'N/A'}<br>
+        <strong>Status:</strong> ${req.status}<br>
+        <strong>Cancel Reason:</strong> ${req.cancel_reason || 'N/A'}<br>
+        <strong>Reschedule Reason:</strong> ${req.reschedule_reason ||'N/A'}<br>
+        <strong>Reschedule Time:</strong> ${req.reschedule_time || 'N/A'} <br>
         <div class="request-actions"></div>
       `;
 
@@ -819,7 +823,7 @@ function closeBillingModal() {
   document.getElementById('billingModal').style.display = 'none';
 }
 
-async function markCODPartialPayment(percentage = 8) {
+async function markCODPartialPayment(percentage = 2) {
   const appointmentId = window.currentAppointmentId;
   const rows = document.querySelectorAll('#billingTable tbody tr');
 

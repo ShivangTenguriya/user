@@ -454,6 +454,7 @@ def provider_requests():
             "problem_description": appt.problem_description,
             "preferred_time": appt.preferred_time.isoformat() if appt.preferred_time else None,
             "status": appt.status,
+            "reschedule_reason": appt.reschedule_reason,
             "cancel_reason": appt.cancel_reason,
             "reschedule_time": appt.reschedule_time.isoformat() if appt.reschedule_time else None,
             "created_at": appt.created_at.isoformat() if appt.created_at else None,
