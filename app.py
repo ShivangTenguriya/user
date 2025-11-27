@@ -601,7 +601,6 @@ def create_razorpay_order():
             'payment_capture': 1
         })
         
-
         
         appointment = Appointment.query.get(appointment_id)
         if appointment:
@@ -622,7 +621,7 @@ def payment_success():
     order_id = data.get("razorpay_order_id")
     signature = data.get("razorpay_signature")
     appointment_id = data.get("appointment_id")
-    user_id = data.get("user_id")
+    
 
     # Verify Razorpay signature
     expected_signature = hmac.new(
@@ -633,14 +632,23 @@ def payment_success():
 
     if expected_signature != signature:
         return jsonify({"error": "Payment verification failed"}), 400
+    
+    appointment = Appointment.query.get(appointment_id)
+    if appointment:
+        appointment.payment_id = payment_id
+        appointment.payment_status = True
+        db.session.commit()
+
 
     # Call USER backend
+    user_id = appointment.user_id
     payload = {
         "appointment_id": appointment_id,
         "payment_id": payment_id,
         "user_id": user_id,
         "provider_secret": USER_BACKEND_SECRET
     }
+
 
     try:
         response = requests.post(USER_BACKEND_URL, json=payload)
@@ -677,15 +685,16 @@ def get_total_collected():
 
 @app.route('/provider/mark_cod_paid/<int:appointment_id>', methods=['POST'])
 @login_required
-def mark_cod_paid(appointment_id):
-    appointment = Appointment.query.get_or_404(appointment_id)
+def mark_cod_paid():
     data = request.get_json()
-    amount = data.get('amount')
+    appointment = data.get('appointment_id')
+    amount = data.get('partial_amount')
+    payment_id = data.get('razorpay_payment_id')
 
     if amount:
         appointment.amount = float(amount)
 
-    appointment.payment_id = "COD"
+    appointment.payment_id = payment_id
     appointment.payment_status = True
     appointment.status = "Completed"
     db.session.commit()

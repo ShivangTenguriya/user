@@ -979,7 +979,9 @@ document.getElementById('billingForm').addEventListener('submit', async function
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ amount: total })
+      body: JSON.stringify({ 
+      amount: total,
+      appointment_id: appointmentId })
     });
 
     const orderData = await orderRes.json();
@@ -996,7 +998,7 @@ document.getElementById('billingForm').addEventListener('submit', async function
       description: "Appointment Billing",
       order_id: orderData.id,
       handler: async function (response) {
-        const verifyRes = await fetch('/api/verify_payment', {
+        const verifyRes = await fetch('/payment/success', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
