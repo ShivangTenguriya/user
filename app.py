@@ -616,11 +616,13 @@ def create_razorpay_order():
 @app.route('/payment/success', methods=['POST'])
 @login_required
 def payment_success():
+    appointment = Appointment.query.get(appointment_id)
     data = request.get_json()
     payment_id = data.get("razorpay_payment_id")
     order_id = data.get("razorpay_order_id")
     signature = data.get("razorpay_signature")
     appointment_id = data.get("appointment_id")
+    user_id = appointment.user_id
     
 
     # Verify Razorpay signature
@@ -633,15 +635,8 @@ def payment_success():
     if expected_signature != signature:
         return jsonify({"error": "Payment verification failed"}), 400
     
-    appointment = Appointment.query.get(appointment_id)
-    if appointment:
-        appointment.payment_id = payment_id
-        appointment.payment_status = True
-        db.session.commit()
 
-
-    # Call USER backend
-    user_id = appointment.user_id
+    
     payload = {
         "appointment_id": appointment_id,
         "payment_id": payment_id,
